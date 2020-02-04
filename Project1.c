@@ -16,10 +16,7 @@ struct treeNode {
 };
 typedef struct treeNode treeNode;
 
-	const char ROOT[] = "ROOT";
-	struct treeNode *head = {0, -1, "ROOT", 0,
-	NULL, NULL, 0 };
-
+treeNode *head;
 
 treeNode * findbyID(treeNode * root, int id);
 treeNode * createNode(int processid, int parentid, char name[1000], long unsigned int size);
@@ -27,16 +24,24 @@ treeNode * createNode(int processid, int parentid, char name[1000], long unsigne
 
 int main(void) {
 
-
 	struct dirent *de; // ptr for directory entry
 	long id; 
 	char buffer[50];
+
+
+
 	DIR *dr = opendir("/proc");
 	
 	if (dr == NULL) {
 		printf("Could not open current directory");
 		return 0;
 	}
+
+	
+	head = ( treeNode*)malloc(sizeof( treeNode));
+	head->processid=0;
+	strcpy(head->name, "head");
+	head->size=0;
 
 	while ((de = readdir(dr)) != NULL) {
 		if(isdigit(*de->d_name)) {
@@ -47,11 +52,9 @@ int main(void) {
 	}
 	closedir(dr);
 
-	
-	
 
 
-
+	printProcTree(head);
 
 	
 	return 0;
@@ -70,17 +73,15 @@ int proc(char* path) {
 			char comm[1000]; 
 			long unsigned int vsize;
 
-			fscanf(fp, "%d %s %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*d %*d %*lu %lu", 
+			fscanf(fp, "%d %s %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %lu", 
 			&pid, comm, &ppid, &vsize);
 
-			//printf("(%d), ppid = %d,  %s, %lu kb\n", 
-			//pid, ppid, comm, (vsize/1000));
-			fclose(fp);
 				
-
+			
 			treeNode *node = createNode(pid, ppid, comm, vsize/1000);
 			add_child(findbyID(head, node->parentid), node);
-
+			
+			fclose(fp);
 			
 		}
 }
@@ -88,7 +89,7 @@ int proc(char* path) {
 
 
  treeNode * createNode(int processid, int parentid, char name[1000], long unsigned int size) {
-	treeNode* new_tNode = ( treeNode*)malloc(sizeof( treeNode)); // allocate memory for node
+	treeNode* new_tNode = (treeNode*)malloc(sizeof( treeNode)); // allocate memory for node
 
 	if ( new_tNode != NULL) {
 		new_tNode->processid=processid;
@@ -97,11 +98,13 @@ int proc(char* path) {
 		new_tNode->size=size;
 		new_tNode->next = NULL;
 		new_tNode->child = NULL;
+	} else {
+		printf("Couldn't allocate memory for node");
 	}
 	return new_tNode;
 }
 
-int add_next(treeNode * first, treeNode *new) {
+int add_next(treeNode* first, treeNode* new) {
 	if(first == NULL || new == NULL) return -1;
 	if(first->next != NULL) {
 		while(first->next != NULL) {
@@ -119,7 +122,7 @@ int add_next(treeNode * first, treeNode *new) {
 	return -1;
 }
 
-int add_child(treeNode * parent, treeNode *child) {
+int add_child(treeNode* parent, treeNode* child) {
 	if (parent == NULL || child == NULL) return -1;
 	
 	if(parent->child != NULL) {
@@ -133,7 +136,7 @@ int add_child(treeNode * parent, treeNode *child) {
 	return -1;
 }
 
-treeNode * findbyID(treeNode * root, int id) {
+treeNode * findbyID(treeNode* root, int id) {
 	for(; root != NULL; root = root->next) {
 		if(root->processid == id) return root;
 		
@@ -146,18 +149,31 @@ treeNode * findbyID(treeNode * root, int id) {
 }
 
 void printProc(treeNode * node) {
-	printf("(%d), %s, %lu kb\n", node->processid, node->name, node->sizse);
+	if(node->processid != 0)
+		printf("(%d), %s, %lu kb\n", node->processid, node->name, node->size);
+
+}
+
+void printProcTree(treeNode *head) {
+	head = head->child;
+	printTree(head);
 }
 
 void printTree(treeNode *root) {
-
-	if(root == NULL) return;
-	
-	for(int i = 0; i < root->depth; i++) {
-		printf("\t");
+	if(root == NULL) {
+		printf("nULLLL");		
+		return;
+	}
+	for(int i = 1; i < root->depth; i++) {
+		printf("    ");
 	}
 
-	printTree(root->next
+	printProc(root);
+
+	if(root->child != NULL)
+		printTree(root->child);
+	if(root->next != NULL)
+		printTree(root->next);
 }
 
 
