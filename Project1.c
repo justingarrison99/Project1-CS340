@@ -70,7 +70,7 @@ int proc(char* path) {
 			char comm[1000]; 
 			long unsigned int vsize;
 
-			fscanf(fp, "%d %s %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu 				%*lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %lu", 
+			fscanf(fp, "%d %s %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*d %*d %*lu %lu", 
 			&pid, comm, &ppid, &vsize);
 
 			//printf("(%d), ppid = %d,  %s, %lu kb\n", 
